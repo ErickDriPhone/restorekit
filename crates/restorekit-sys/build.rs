@@ -279,6 +279,7 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
         configure.env("LIBS", "-lws2_32 -liphlpapi -lole32 -lsetupapi");
     }
     run(&mut configure, &format!("{name} configure"));
+    quote_libtool_globs(&build_dir.join("libtool"));
 
     let jobs = env::var("NUM_JOBS").unwrap_or_else(|_| "4".into());
     let mut make = Command::new("make");
@@ -301,6 +302,37 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
     }
     run(&mut make_install, &format!("{name} make install"));
     std::fs::write(&marker, "").unwrap();
+}
+
+/// Quote the file globs in the generated `libtool` script's convenience-library
+/// extraction.
+///
+/// To fold a convenience library into a static one, libtool unpacks its members
+/// and collects them back with an unquoted, backslash-escaped pattern:
+///
+/// ```sh
+/// my_oldobjs="$my_oldobjs "`find $my_xdir -name \*.$objext -print -o -name \*.lo -print | ...`
+/// ```
+///
+/// The escape doesn't survive the backtick substitution in the shell MSYS2 hands
+/// us when cargo (a native Windows process) drives the build rather than the
+/// MINGW64 login shell, so `*.o` is expanded against the build directory before
+/// find ever sees it. find then bails with "paths must precede expression", and
+/// because libtool never checks, the member list comes back empty: the archive
+/// is created without them and the build limps on. libplist ships libcnary that
+/// way, so `libplist-2.0.a` loses node.o, and the first thing to link plist_*
+/// (its own plistutil, then everything downstream) dies on `undefined reference
+/// to 'node_attach'`.
+fn quote_libtool_globs(libtool: &Path) {
+    let Ok(script) = std::fs::read_to_string(libtool) else {
+        return;
+    };
+    let quoted = script
+        .replace(r"\*.$objext", r#""*.$objext""#)
+        .replace(r"\*.lo", r#""*.lo""#);
+    if quoted != script {
+        std::fs::write(libtool, quoted).unwrap();
+    }
 }
 
 fn build_libzip(src: &Path, deps: &Deps) {
