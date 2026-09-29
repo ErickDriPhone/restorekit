@@ -23,12 +23,20 @@ Tokens live in `src/app.css`. Use them instead of raw hex values.
 Gold is the only accent, and it always means you can press it (or it's a step
 number). Don't use it for decoration or to color a single word in a heading.
 
+### Light mode (desktop app)
+
+The desktop app follows the system appearance. Light mode is the same board in
+white soldermask: `#f4f5ef` background, `#10301f` ink, `#cbd8cd` lines, and a
+darker gold `#8a6414` so it passes contrast on white. Tokens live in
+`apps/desktop/src/lib/theme.css`.
+
 ## Type
 
 - **Archivo** (variable, self-hosted) for everything that isn't code.
   - Headings use the expanded width (`font-stretch: 125%`), bold to extra bold.
   - Body text stays at normal width, 17px, line height 1.6.
-- **Spline Sans Mono** only for real code: commands, flags, file names, code blocks.
+- **Spline Sans Mono** only for real code and machine data: commands, flags, file
+  names, code blocks, and in the app ECIDs, serials, identifiers and logs (`.mono`).
 
 | Class       | Size                   | Use                                   |
 | ----------- | ---------------------- | ------------------------------------- |

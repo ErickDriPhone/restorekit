@@ -1,7 +1,17 @@
-/* RestoreKit — "service instrument" identity.
-   Warm near-black terminal · ink on toasted paper · amber signal · mono voice.
-   Dark and light are the same instrument under two lamps; the app follows the
-   system color scheme (prefers-color-scheme). Token names drive every component. */
+/* restorekit brand, same as the website (apps/landing/BRAND.md): the app is a
+   circuit board. Soldermask green, copper traces for lines, white silkscreen
+   for text and gold pads for anything you can press. Light mode is the same
+   board in white soldermask. The app follows the system color scheme and
+   token names drive every component. */
+
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url("./fonts/archivo.woff2") format("woff2");
+}
 
 @font-face {
   font-family: "Spline Sans Mono";
@@ -12,51 +22,52 @@
 }
 
 :root {
-  --page: #050505;
-  --bg: #0a0a08;
-  --bar: #0d0d0a;
-  --line: #232219;
-  --line2: #33322a;
-  --raise: #101009;
-  --ink: #e6e2d6;
-  --ink2: #d7d2c4;
-  --mut: #8f8f7a;
-  --fnt: #77766a;
-  --dim: #5c5c50;
-  --acc: #e8a33d;
-  --accink: #17130a;
-  --acchov: #f0b255;
-  --ok: #7ba86a;
-  --alt: #6a93a8;
-  --danger: #e0715f;
-  --dangersoft: rgba(224, 113, 95, 0.13);
-  --accsoft: rgba(232, 163, 61, 0.06);
-  --overlay: rgba(4, 4, 3, 0.66);
+  --page: #0b2d21;
+  --bg: #103d2e;
+  --bar: #0b2d21;
+  --line: #1f5c45;
+  --line2: #2b7457;
+  --raise: #144836;
+  --ink: #f1f0e6;
+  --ink2: #c4d3c8;
+  --mut: #92b1a1;
+  --fnt: #7fa391;
+  --dim: #5f8a76;
+  --acc: #dcb660;
+  --accink: #10301f;
+  --acchov: #ecca7c;
+  --ok: #b2de93;
+  --alt: #9fc7d8;
+  --danger: #f5937c;
+  --dangersoft: rgba(245, 147, 124, 0.12);
+  --accsoft: rgba(220, 182, 96, 0.1);
+  --overlay: rgba(4, 20, 14, 0.7);
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    --page: #d9d4c8;
-    --bg: #efebe1;
-    --bar: #e6e1d5;
-    --line: #d4cebd;
-    --line2: #c3bba6;
-    --raise: #f5f2ea;
-    --ink: #191712;
-    --ink2: #33302a;
-    --mut: #6f6a5b;
-    --fnt: #948d7b;
-    --dim: #a69f8c;
-    --acc: #bd7d14;
-    --accink: #fff8ea;
-    --acchov: #a86d0e;
-    --ok: #3d7a4c;
+    --page: #e1e6dd;
+    --bg: #f4f5ef;
+    --bar: #eaeee6;
+    --line: #cbd8cd;
+    --line2: #aebfb2;
+    --raise: #fbfbf8;
+    --ink: #10301f;
+    --ink2: #264a3b;
+    --mut: #52705f;
+    --fnt: #6a8676;
+    --dim: #8fa598;
+    --acc: #8a6414;
+    --accink: #fffaf0;
+    --acchov: #745310;
+    --ok: #2f7a45;
     --alt: #2f6f92;
     --danger: #b23a2c;
     --dangersoft: rgba(178, 58, 44, 0.09);
-    --accsoft: rgba(189, 125, 20, 0.09);
-    --overlay: rgba(60, 54, 42, 0.34);
+    --accsoft: rgba(138, 100, 20, 0.09);
+    --overlay: rgba(16, 48, 31, 0.3);
   }
 }
 
@@ -71,8 +82,8 @@ body {
 body {
   background: var(--page);
   color: var(--ink2);
-  font-family: var(--font-mono);
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   user-select: none;
@@ -102,15 +113,15 @@ button {
   cursor: pointer;
 }
 
-/* Shared button voice — square-ish, mono, terminal. */
+/* Buttons are pads: gold for the main action, outlined for the rest. */
 .btn {
   border: 1px solid var(--line2);
   background: transparent;
   color: var(--ink2);
   font-family: inherit;
-  font-size: 12.5px;
-  padding: 11px 18px;
-  border-radius: 6px;
+  font-size: 13.5px;
+  padding: 10px 18px;
+  border-radius: 5px;
   transition:
     background 0.14s,
     border-color 0.14s,
@@ -145,8 +156,7 @@ button {
 }
 .btn.sm {
   padding: 7px 13px;
-  font-size: 11.5px;
-  border-radius: 5px;
+  font-size: 12.5px;
 }
 .btn:disabled {
   opacity: 0.5;
@@ -154,11 +164,23 @@ button {
 }
 
 :focus-visible {
-  outline: 1px solid var(--acc);
+  outline: 2px solid var(--acc);
   outline-offset: 2px;
 }
 ::selection {
   background: var(--accsoft);
+}
+
+/* Machine data (ECIDs, serials, identifiers, logs) stays monospaced. */
+.mono {
+  font-family: var(--font-mono) !important;
+  font-size: 0.93em;
+}
+
+/* Headings use Archivo's expanded cut, like the website. */
+.wide {
+  font-stretch: 125%;
+  letter-spacing: -0.015em;
 }
 
 @media (prefers-reduced-motion: reduce) {

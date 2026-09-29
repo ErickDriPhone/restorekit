@@ -229,11 +229,11 @@
 
   const MODE_TAG: Record<Mode, string> = {
     dfu: "DFU",
-    recovery: "RCVRY",
-    restore: "RSTR",
+    recovery: "Recovery",
+    restore: "Restore",
     wtf: "WTF",
-    booted: "BOOT",
-    other: "CONN",
+    booted: "Booted",
+    other: "Connected",
   };
   const MODE_COLOR: Record<Mode, string> = {
     dfu: "var(--acc)",
@@ -246,7 +246,7 @@
 
   function firmwareLine(): string {
     if (ipswPath) return ipswPath.split("/").pop() ?? "local IPSW";
-    if (firmware) return `macOS ${firmware.version} · ${gib(firmware.size)}`;
+    if (firmware) return `macOS ${firmware.version}, ${gib(firmware.size)}`;
     return "resolved automatically";
   }
 
@@ -539,6 +539,10 @@
     const s = secs % 60;
     return `${m}:${String(s).padStart(2, "0")}`;
   }
+  // ", 1:23" after a label, or nothing before the job has started.
+  function elapsedSuffix(j: JobView): string {
+    return jobStart[j.id] === undefined ? "" : `, ${fmtElapsed(j)}`;
+  }
 
   // Remember a serial harvested from a restore's log, keyed by the job's ECID,
   // and persist it — this is the one path that captures a Mac only ever seen in
@@ -650,10 +654,10 @@
   // over the device's USB mode.
   function rowTag(r: RosterRow): { label: string; color: string } {
     const j = r.job;
-    if (j && (j.status === "running" || j.status === "queued")) return { label: "RSTR", color: JOB_COLOR.running };
-    if (j && j.status === "done") return { label: "DONE", color: JOB_COLOR.done };
-    if (j && j.status === "failed") return { label: "FAIL", color: JOB_COLOR.failed };
-    if (j && j.status === "canceled") return { label: "CNCL", color: JOB_COLOR.canceled };
+    if (j && (j.status === "running" || j.status === "queued")) return { label: "Restoring", color: JOB_COLOR.running };
+    if (j && j.status === "done") return { label: "Done", color: JOB_COLOR.done };
+    if (j && j.status === "failed") return { label: "Failed", color: JOB_COLOR.failed };
+    if (j && j.status === "canceled") return { label: "Canceled", color: JOB_COLOR.canceled };
     if (r.device) return { label: MODE_TAG[r.device.mode], color: MODE_COLOR[r.device.mode] };
     return { label: "—", color: "var(--mut)" };
   }
@@ -1075,9 +1079,9 @@
               <span class="rowname">{r.name}</span>
               {#if jobActive(r.job)}
                 <span class="minibar"><span class="minifill" style="width:{Math.max(3, Math.min(100, r.job?.progress ?? 0))}%; background:{tag.color}"></span></span>
-                <span class="rowsub">{r.job?.step} · {r.job ? fmtElapsed(r.job) : ""}</span>
+                <span class="rowsub">{r.job?.step}{r.job ? elapsedSuffix(r.job) : ""}</span>
               {:else if r.job && r.job.status !== "queued"}
-                <span class="rowsub" style="color:{tag.color}">{r.job.status}{r.job.status === "failed" && r.job.message ? ` — ${r.job.message}` : ""}</span>
+                <span class="rowsub" style="color:{tag.color}">{r.job.status}{r.job.status === "failed" && r.job.message ? `: ${r.job.message}` : ""}</span>
               {:else}
                 <span class="rowsub">{r.ecid || (r.device ? r.device.serial : "—")}</span>
               {/if}
@@ -1122,17 +1126,17 @@
         <div class="hero">
           <div class="badge"><span class="pulse"></span></div>
           <div class="empty-title">No Apple devices connected</div>
-          <p class="lede">Cable a Mac to this host's DFU port. RestoreKit detects it the moment it enumerates.</p>
+          <p class="lede">Cable a Mac to this host's DFU port. restorekit detects it the moment it enumerates.</p>
         </div>
       {:else if selectedRow}
         <div class="pane">
           {#if selectedJob}
             <div class="eyebrow" style="color:{JOB_COLOR[selectedJob.status] ?? 'var(--acc)'}">
-              {restoring ? `Restoring · ${selectedJob.step}` : selectedJob.status}
+              {restoring ? `Restoring, ${selectedJob.step.toLowerCase()}` : selectedJob.status}
             </div>
           {:else if selected}
             <div class="eyebrow" style="color:{MODE_COLOR[selected.mode]}">
-              {MODES[selected.mode].label} · {MODES[selected.mode].hint}
+              {MODES[selected.mode].label}, {MODES[selected.mode].hint}
             </div>
           {/if}
           <h1 class="dtitle">
@@ -1142,11 +1146,11 @@
 
           {#if selected}
             <div class="spec">
-              <div class="k">Identifier</div><div class="v"><button class="cellcopy" onclick={() => copy(selected.identifier ?? "")}>{selected.identifier ?? "—"}</button></div>
-              <div class="k">Serial</div><div class="v"><button class="cellcopy" onclick={() => copy(serialFor(selected) ?? "")}>{serialFor(selected) ?? "—"}</button></div>
-              <div class="k">Chip · board</div><div class="v"><button class="cellcopy" onclick={() => copy(`${selected.chip} ${selected.board}`.trim())}>{selected.chip || "—"} · {selected.board || "—"}</button></div>
-              <div class="k">ECID</div><div class="v"><button class="cellcopy" onclick={() => copy(selected.ecid ?? "")}>{selected.ecid || "—"}</button></div>
-              <div class="k">iBoot</div><div class="v"><button class="cellcopy" onclick={() => copy(selected.srtg ?? "")}>{selected.srtg ?? "—"}</button></div>
+              <div class="k">Identifier</div><div class="v"><button class="cellcopy mono" onclick={() => copy(selected.identifier ?? "")}>{selected.identifier ?? "—"}</button></div>
+              <div class="k">Serial</div><div class="v"><button class="cellcopy mono" onclick={() => copy(serialFor(selected) ?? "")}>{serialFor(selected) ?? "—"}</button></div>
+              <div class="k">Chip, board</div><div class="v"><button class="cellcopy mono" onclick={() => copy(`${selected.chip} ${selected.board}`.trim())}>{selected.chip || "—"} {selected.board || "—"}</button></div>
+              <div class="k">ECID</div><div class="v"><button class="cellcopy mono" onclick={() => copy(selected.ecid ?? "")}>{selected.ecid || "—"}</button></div>
+              <div class="k">iBoot</div><div class="v"><button class="cellcopy mono" onclick={() => copy(selected.srtg ?? "")}>{selected.srtg ?? "—"}</button></div>
               {#if selected.port}
                 <div class="k">Port</div>
                 <div class="v">
@@ -1159,12 +1163,12 @@
                 <div class="v">through dongle <button class="cellcopy" onclick={() => copy(selected.via_dongle ?? "")}>{selected.via_dongle}</button></div>
               {:else if selected.connection === "hub"}
                 <div class="k">Connection</div>
-                <div class="v">behind a USB hub — no DFU path from this host</div>
+                <div class="v">behind a USB hub, so this computer can't trigger DFU</div>
               {/if}
             </div>
           {:else if selectedRow.ecid}
             <div class="spec">
-              <div class="k">ECID</div><div class="v"><button class="cellcopy" onclick={() => copy(selectedRow.ecid ?? "")}>{selectedRow.ecid}</button></div>
+              <div class="k">ECID</div><div class="v"><button class="cellcopy mono" onclick={() => copy(selectedRow.ecid ?? "")}>{selectedRow.ecid}</button></div>
               <div class="k">State</div><div class="v">disconnected (restoring or rebooting)</div>
             </div>
           {/if}
@@ -1176,7 +1180,7 @@
             <div class="block">
               <div class="prow">
                 <span class="plabel">{restoring ? selectedJob.step : selectedJob.status}</span>
-                <span class="ppct">{Math.round(selectedJob.progress)}% · {fmtElapsed(selectedJob)}</span>
+                <span class="ppct">{Math.round(selectedJob.progress)}%{elapsedSuffix(selectedJob)}</span>
               </div>
               <div class="pbar"><div class="pfill" style="width:{Math.max(2, Math.min(100, selectedJob.progress))}%; background:{JOB_COLOR[selectedJob.status] ?? 'var(--acc)'}"></div></div>
               {#if restoring}
@@ -1234,7 +1238,7 @@
                 </span>
               </div>
               {#if restoreMode === "obliterate"}
-                <p class="opt-note">Destroys the encryption key and stops — the Mac is left wiped with no OS. Fast decommissioning wipe; run Erase &amp; restore afterward to make it usable.</p>
+                <p class="opt-note">Destroys the encryption key and stops. The Mac is left wiped with no OS. Fast decommissioning wipe; run Erase &amp; restore afterward to make it usable.</p>
               {/if}
             </div>
 
@@ -1246,16 +1250,16 @@
           {:else if mMode === "usb"}
             <div class="notice">
               <div class="notice-body">
-                One-time setup: RestoreKit needs USB access to this Mac before it can restore. Binds the WinUSB driver behind a single Windows prompt.
+                restorekit needs USB access to this Mac once before it can restore. It binds the WinUSB driver behind a single Windows prompt.
               </div>
               <button class="btn primary" onclick={openDriverSetup}>Set up USB access</button>
             </div>
           {:else if mMode === "dfu"}
             <div class="block">
               {#if selected.via_dongle}
-                <p class="lede">Restore needs DFU mode. This Mac is connected through dongle {selected.via_dongle}, so RestoreKit triggers DFU over the dongle — no password needed.</p>
+                <p class="lede">Restore needs DFU mode. This Mac is connected through dongle {selected.via_dongle}, so restorekit triggers DFU over the dongle. No password needed.</p>
               {:else}
-                <p class="lede">Restore needs DFU mode. Put this Mac into DFU to continue — the trigger asks for permission once; only that step runs as root.</p>
+                <p class="lede">Restore needs DFU mode. Put this Mac into DFU to continue. The trigger asks for permission once, and only that step runs as root.</p>
               {/if}
               <div class="actions">
                 <button class="btn primary" onclick={enterDfu} disabled={!!busy}>{busy ? (selected.via_dongle ? "Triggering…" : "Authorizing…") : "Enter DFU mode"}</button>
@@ -1275,7 +1279,7 @@
   </div>
   {:else if tab === "restore"}
     <section class="tabview">
-      <div class="tabhead"><span class="eyebrow">Targets · {roster.length}</span></div>
+      <div class="tabhead"><span class="eyebrow">Targets ({roster.length})</span></div>
       {#if roster.length}
         <div class="dlist">
           {#each roster as r (r.key)}
@@ -1290,15 +1294,15 @@
                 <div class="dcard-meta">
                   {#if r.device && serialFor(r.device)}<span>serial {serialFor(r.device)}</span>{/if}
                   <span>ecid {r.ecid ?? "—"}</span>
-                  {#if r.device}<span>{r.device.mode}{r.device.port?.location ? ` · ${r.device.port.location}` : ""}{r.device.via_dongle ? " · via dongle" : ""}</span>{:else}<span>disconnected</span>{/if}
+                  {#if r.device}<span>{r.device.mode}{r.device.port?.location ? `, ${r.device.port.location}` : ""}{r.device.via_dongle ? ", via dongle" : ""}</span>{:else}<span>disconnected</span>{/if}
                 </div>
                 {#if r.job && jobActive(r.job)}
                   <div class="dcard-prog">
                     <span class="pbar"><span class="pfill" style="width:{Math.max(3, Math.min(100, r.job.progress))}%; background:{tag.color}"></span></span>
-                    <span class="jobpct">{Math.round(r.job.progress)}% · {r.job.step} · {fmtElapsed(r.job)}</span>
+                    <span class="jobpct">{Math.round(r.job.progress)}%, {r.job.step}{elapsedSuffix(r.job)}</span>
                   </div>
                 {:else if r.job && r.job.status !== "queued"}
-                  <div class="dcard-meta"><span style="color:{tag.color}">{r.job.status}{r.job.status === "failed" && r.job.message ? ` — ${r.job.message}` : ""}</span></div>
+                  <div class="dcard-meta"><span style="color:{tag.color}">{r.job.status}{r.job.status === "failed" && r.job.message ? `: ${r.job.message}` : ""}</span></div>
                 {/if}
               </div>
               <div class="dcard-actions">
@@ -1318,7 +1322,7 @@
                     <button class="btn primary sm" onclick={() => { selectedKey = r.key; restoreView = "detail"; }}>Set up USB</button>
                   {/if}
                 {/if}
-                <button class="btn ghost sm" title="Full config + log" onclick={() => { select(r.key); restoreView = "detail"; }}>Open →</button>
+                <button class="btn ghost sm" title="Full config + log" onclick={() => { select(r.key); restoreView = "detail"; }}>Open</button>
               </div>
             </div>
           {/each}
@@ -1331,9 +1335,9 @@
     <section class="tabview">
       <div class="tabhead">
         <span class="seg">
-          <button class="segbtn" class:on={devSubtab === "connected"} onclick={() => (devSubtab = "connected")}>Connected · {devices.length}</button>
+          <button class="segbtn" class:on={devSubtab === "connected"} onclick={() => (devSubtab = "connected")}>Connected ({devices.length})</button>
           {#if historyEnabled}
-            <button class="segbtn" class:on={devSubtab === "history"} onclick={() => { devSubtab = "history"; loadSeen(); }}>All seen · {seenDevices.length}</button>
+            <button class="segbtn" class:on={devSubtab === "history"} onclick={() => { devSubtab = "history"; loadSeen(); }}>All seen ({seenDevices.length})</button>
           {/if}
         </span>
         <div class="grow"></div>
@@ -1355,19 +1359,19 @@
                 {@const e = ecidFor(d)}
                 {@const q = qrOf(d)}
                 <tr>
-                  <td><button class="cellcopy" onclick={() => copy(s ?? "")}>{s ?? "—"}</button></td>
+                  <td><button class="cellcopy mono" onclick={() => copy(s ?? "")}>{s ?? "—"}</button></td>
                   <td>
                     <button class="cellcopy" onclick={() => copy(d.name)}>{d.name}</button>
-                    {#if d.identifier}<button class="cellcopy cellsub" onclick={() => copy(d.identifier!)}>{d.identifier}</button>{/if}
+                    {#if d.identifier}<button class="cellcopy mono cellsub" onclick={() => copy(d.identifier!)}>{d.identifier}</button>{/if}
                   </td>
-                  <td><button class="cellcopy" onclick={() => copy(e ?? "")}>{e ?? "—"}</button></td>
+                  <td><button class="cellcopy mono" onclick={() => copy(e ?? "")}>{e ?? "—"}</button></td>
                   <td><button class="cellcopy" onclick={() => copy(d.mode)}><span class="mtag" style="color:{MODE_COLOR[d.mode]}">{MODE_TAG[d.mode]}</span></button></td>
                   <td><button class="cellcopy" onclick={() => copy(d.port?.location ?? "")}>{d.port?.location ?? "—"}</button></td>
                   {#if showQrInList}
                     <td class="qrcell">{#if q && qrCache[q.value]}{@html qrCache[q.value]}{/if}</td>
                   {/if}
                   <td class="right nowrap">
-                    <button class="iconbtn" title="Open in Restore" onclick={() => openInRestore(d)}>Open →</button>
+                    <button class="iconbtn" title="Open in Restore" onclick={() => openInRestore(d)}>Open</button>
                     {#if historyEnabled && q}
                       <button class="iconbtn" title="Show QR" aria-label="Show QR" onclick={() => showQr(q.value, q.label)}>QR</button>
                     {/if}
@@ -1380,7 +1384,7 @@
         {:else}
           <div class="tabempty">No devices connected.</div>
         {/if}
-        <p class="tabnote">Serial capture works in recovery mode and for booted Macs — DFU mode usually doesn't expose the hardware serial.</p>
+        <p class="tabnote">Serial capture works in recovery mode and for booted Macs. DFU mode usually doesn't expose the hardware serial.</p>
       {:else if seenDevices.length}
         <table class="tbl">
           <thead>
@@ -1389,12 +1393,12 @@
           <tbody>
             {#each seenDevices as sd (sd.ecid)}
               <tr>
-                <td><button class="cellcopy" onclick={() => copy(sd.serial_number ?? "")}>{sd.serial_number ?? "—"}</button></td>
+                <td><button class="cellcopy mono" onclick={() => copy(sd.serial_number ?? "")}>{sd.serial_number ?? "—"}</button></td>
                 <td>
                   <button class="cellcopy" onclick={() => copy(sd.name)}>{sd.name}</button>
-                  {#if sd.model_identifier}<button class="cellcopy cellsub" onclick={() => copy(sd.model_identifier!)}>{sd.model_identifier}</button>{/if}
+                  {#if sd.model_identifier}<button class="cellcopy mono cellsub" onclick={() => copy(sd.model_identifier!)}>{sd.model_identifier}</button>{/if}
                 </td>
-                <td><button class="cellcopy" onclick={() => copy(sd.ecid)}>{sd.ecid}</button></td>
+                <td><button class="cellcopy mono" onclick={() => copy(sd.ecid)}>{sd.ecid}</button></td>
                 <td><span class="mtag">{sd.mode}</span></td>
                 <td class="seentime">{fmtTime(sd.first_seen)}</td>
                 <td class="seentime">{fmtTime(sd.last_seen)}</td>
@@ -1410,7 +1414,7 @@
   {:else if tab === "dongles"}
     <section class="tabview">
       <div class="tabhead">
-        <span class="eyebrow">Dongles · {dongles.length}</span>
+        <span class="eyebrow">Dongles ({dongles.length})</span>
         <div class="grow"></div>
       </div>
       {#if dongles.length}
@@ -1422,7 +1426,7 @@
             {#each dongles as dg (dg.serial)}
               <tr>
                 <td>
-                  <button class="cellcopy" onclick={() => copy(dg.serial)}>{dg.serial}</button>
+                  <button class="cellcopy mono" onclick={() => copy(dg.serial)}>{dg.serial}</button>
                   <button class="cellcopy cellsub" onclick={() => copy(dg.product)}>{dg.product}</button>
                 </td>
                 <td>
@@ -1430,7 +1434,7 @@
                     <button class="cellcopy" onclick={() => copy(dg.target!.name)}>{dg.target.name}</button>
                     <span class="cellsub"><span class="mtag" style="color:{MODE_COLOR[dg.target.mode]}">{MODE_TAG[dg.target.mode]}</span></span>
                   {:else if dg.status?.target_attached}
-                    <span class="cellsub">attached — USB data not on this host</span>
+                    <span class="cellsub">attached, but its USB data isn't reaching this computer</span>
                   {:else}
                     <span class="cellsub">no target</span>
                   {/if}
@@ -1458,7 +1462,7 @@
           </tbody>
         </table>
         {#if error}<div class="tabnote" style="color:var(--danger)">{error}</div>{/if}
-        <p class="tabnote">Dongles trigger DFU over USB-PD — no admin approval, and it works from any host OS. The target's USB data must reach this host to restore it.</p>
+        <p class="tabnote">Dongles trigger DFU over USB-PD, with no admin approval, from any OS. The target's USB data must reach this host to restore it.</p>
       {:else}
         <div class="tabempty">No RecoverKit dongles connected.</div>
       {/if}
@@ -1466,7 +1470,7 @@
   {:else if tab === "history"}
     <section class="tabview">
       <div class="tabhead">
-        <span class="eyebrow">History · {history.length}</span>
+        <span class="eyebrow">History ({history.length})</span>
         <div class="grow"></div>
         <button class="btn sm" onclick={doExportCsv} disabled={!history.length}>Export CSV</button>
         <button class="btn ghost sm" onclick={() => (confirmingClearHistory = true)} disabled={!history.length}>Clear</button>
@@ -1480,9 +1484,9 @@
             {#each history as h, i (i)}
               <tr>
                 <td><button class="cellcopy" onclick={() => copy(fmtTime(h.timestamp_rfc3339))}>{fmtTime(h.timestamp_rfc3339)}</button></td>
-                <td><button class="cellcopy" onclick={() => copy(h.serial_number ?? "")}>{h.serial_number ?? "—"}</button></td>
-                <td><button class="cellcopy" onclick={() => copy(h.model_identifier ?? h.name)}>{h.model_identifier ?? h.name}</button></td>
-                <td><button class="cellcopy" onclick={() => copy(h.ecid)}>{h.ecid || "—"}</button></td>
+                <td><button class="cellcopy mono" onclick={() => copy(h.serial_number ?? "")}>{h.serial_number ?? "—"}</button></td>
+                <td><button class="cellcopy mono" onclick={() => copy(h.model_identifier ?? h.name)}>{h.model_identifier ?? h.name}</button></td>
+                <td><button class="cellcopy mono" onclick={() => copy(h.ecid)}>{h.ecid || "—"}</button></td>
                 <td><button class="cellcopy" onclick={() => copy(h.mode)}><span class="mtag">{h.mode}</span></button></td>
                 <td><button class="cellcopy" onclick={() => copy(h.status)}>{h.status}</button></td>
                 <td class="right"><button class="iconbtn" title="Copy row" aria-label="Copy row" onclick={() => copy(historyLine(h))}>{@render copyicon()}</button></td>
@@ -1514,7 +1518,7 @@
     </span>
     {#if cache}
       <span class="footcache">
-        cache · {cache.count} firmware · {gib(cache.bytes)}
+        {cache.count} cached firmware, {gib(cache.bytes)}
         <span class="faint">{cache.path}</span>
         <button class="linkbtn" onclick={() => (confirmingClear = true)} disabled={cache.count === 0}>Clear</button>
       </span>
@@ -1533,9 +1537,9 @@
         </div>
         <p class="modal-body">
           {restoreMode === "revive"
-            ? "Revive reinstalls firmware and keeps existing data — no erase. The target reboots when done."
+            ? "Revive reinstalls firmware and keeps existing data. Nothing is erased, and the target reboots when done."
             : restoreMode === "obliterate"
-              ? "This destroys the encryption key and stops — the Mac is wiped but no OS is reinstalled, so it will be left unbootable. Run Erase & restore afterward to make it usable. It cannot be undone."
+              ? "This destroys the encryption key and stops. The Mac is wiped but no OS is reinstalled, so it will be left unbootable. Run Erase & restore afterward to make it usable. It cannot be undone."
               : "This erases all data on the target and installs a fresh copy of macOS. It cannot be undone."}
         </p>
         <div class="modal-actions">
@@ -1559,8 +1563,8 @@
         {:else}
           <h3>Approve the DFU helper</h3>
           <p class="modal-body">
-            RestoreKit installs a small privileged helper so it can trigger DFU over USB-PD. Enable
-            <b>restorekit</b> under Login Items → Allow in the Background, then come back — this window detects it automatically.
+            restorekit installs a small privileged helper so it can trigger DFU over USB-PD. Enable
+            <b>restorekit</b> under Login Items, in Allow in the Background, then come back. This window notices on its own.
           </p>
           {#if approvalNote}<p class="err">{approvalNote}</p>{/if}
           <div class="modal-actions start">
@@ -1588,7 +1592,7 @@
           </div>
         {:else}
           <h3>Set up USB access</h3>
-          <p class="modal-body">This binds the WinUSB driver to the target behind a single Windows prompt — one time per PC.</p>
+          <p class="modal-body">This binds the WinUSB driver to the target behind a single Windows prompt, once per PC.</p>
           {#if driverError}<p class="err">{driverError}</p>{/if}
           <div class="modal-actions start">
             <button class="btn primary" onclick={runDriverSetup} disabled={driverBusy}>{driverBusy ? "Binding…" : "Bind WinUSB driver"}</button>
@@ -1618,8 +1622,8 @@
   {#if showLicenses}
     <div class="scrim">
       <div class="modal licmodal">
-        <div class="eyebrow" style="color:var(--acc)">restorekit{appVersion ? ` · ${appVersion}` : ""}</div>
-        <h3>Third-party licenses · {licenseCount}</h3>
+        <div class="eyebrow" style="color:var(--acc)">restorekit{appVersion ? ` ${appVersion}` : ""}</div>
+        <h3>Third-party licenses ({licenseCount})</h3>
         <p class="modal-body" style="margin-bottom:12px">
           restorekit bundles these open-source components (generated with cargo-about plus the
           vendored C libraries). The restorekit source is Apache-2.0; macOS builds link Apache,
@@ -1713,23 +1717,23 @@
     gap: 8px;
   }
   .name {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--ink);
+    font-stretch: 125%;
   }
   .host {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 10.5px;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    font-size: 12px;
     color: var(--mut);
   }
   .hostdot {
-    width: 7px;
+    width: 11px;
     height: 7px;
+    border-radius: 2px;
     display: block;
   }
 
@@ -1744,15 +1748,16 @@
     flex: none;
   }
   .bandot {
-    width: 7px;
+    width: 11px;
     height: 7px;
+    border-radius: 2px;
     background: var(--acc);
     display: block;
     flex: none;
   }
   .banmsg {
     flex: 1;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--ink2);
   }
   .banmsg b {
@@ -1780,15 +1785,14 @@
     display: flex;
     justify-content: space-between;
     padding: 15px 16px 12px;
-    font-size: 10px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    font-size: 11.5px;
     color: var(--fnt);
   }
   .count {
     color: var(--dim);
   }
   .row {
+    border: 0;
     display: flex;
     gap: 12px;
     padding: 13px 16px 13px 14px;
@@ -1811,10 +1815,8 @@
   }
   .row .mode {
     flex: none;
-    width: 50px;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    width: 66px;
+    font-size: 12px;
     padding-top: 1px;
   }
   .rowmeta {
@@ -1824,15 +1826,16 @@
     min-width: 0;
   }
   .rowname {
-    font-size: 12.5px;
+    font-size: 13.5px;
     color: var(--ink);
   }
   .rowsub {
-    font-size: 10.5px;
+    font-size: 12px;
     color: var(--dim);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-family: var(--font-mono);
   }
   .minibar {
     display: block;
@@ -1854,7 +1857,7 @@
     flex-direction: column;
     gap: 8px;
     align-items: center;
-    font-size: 11.5px;
+    font-size: 12.5px;
     color: var(--mut);
   }
   .pulse {
@@ -1875,9 +1878,7 @@
     max-width: 520px;
   }
   .eyebrow {
-    font-size: 10.5px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    font-size: 12px;
     color: var(--mut);
     margin-bottom: 12px;
   }
@@ -1893,6 +1894,7 @@
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--ink);
+    font-stretch: 125%;
   }
   .dtitle {
     display: flex;
@@ -1911,18 +1913,22 @@
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--ink);
+    font-stretch: 125%;
   }
   h3 {
     margin: 0 0 12px;
     font-size: 17px;
     font-weight: 600;
     color: var(--ink);
+    font-stretch: 125%;
   }
 
   /* spec table */
   .spec {
     max-width: 520px;
     border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
     display: grid;
     grid-template-columns: 128px 1fr;
   }
@@ -1940,26 +1946,23 @@
     border-top: 0;
   }
   .spec .k {
-    font-size: 10px;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
+    font-size: 11.5px;
     color: var(--fnt);
     border-right: 1px solid var(--line);
   }
   .spec .v {
-    font-size: 12.5px;
+    font-size: 13.5px;
     color: var(--ink2);
     display: flex;
     align-items: center;
     gap: 8px;
   }
   .tag {
-    font-size: 9.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 11px;
     padding: 1px 6px;
     background: var(--line2);
     color: var(--fnt);
+    border-radius: 4px;
   }
   .tag.ok {
     background: var(--accsoft);
@@ -1981,25 +1984,24 @@
   }
   .opt-note {
     margin: 8px 0 0 110px;
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.45;
     color: var(--danger);
   }
   .ok-label {
     width: 96px;
     flex: none;
-    font-size: 10px;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
+    font-size: 11.5px;
     color: var(--fnt);
   }
   .field {
     flex: 1;
-    border: 1px solid var(--line);
+    border: 1px solid var(--line2);
+    border-radius: 5px;
     background: transparent;
     padding: 8px 11px;
-    font-family: inherit;
-    font-size: 12px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
     color: var(--ink2);
   }
   input.field::placeholder {
@@ -2007,7 +2009,7 @@
   }
   input.field:focus {
     outline: none;
-    border-color: var(--line2);
+    border-color: var(--acc);
   }
   .field.pick {
     display: flex;
@@ -2022,7 +2024,7 @@
     border: 0;
     padding: 8px 11px;
     font: inherit;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--dim);
     text-align: left;
     overflow: hidden;
@@ -2040,7 +2042,8 @@
     padding: 2px 9px;
     margin-right: 6px;
     font: inherit;
-    font-size: 10.5px;
+    font-size: 12px;
+    border-radius: 4px;
   }
   .browse:hover {
     border-color: var(--fnt);
@@ -2051,7 +2054,7 @@
     display: inline-flex;
   }
   .segbtn {
-    font-size: 11px;
+    font-size: 12px;
     padding: 6px 13px;
     font-weight: 600;
     border: 1px solid var(--line2);
@@ -2061,6 +2064,12 @@
   }
   .segbtn + .segbtn {
     border-left: 0;
+  }
+  .segbtn:first-child {
+    border-radius: 5px 0 0 5px;
+  }
+  .segbtn:last-child {
+    border-radius: 0 5px 5px 0;
   }
   .segbtn.on {
     background: var(--acc);
@@ -2096,6 +2105,8 @@
     display: flex;
     flex-direction: column;
     border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
   }
   .dcard {
     display: flex;
@@ -2126,7 +2137,7 @@
     flex-wrap: wrap;
     gap: 6px 14px;
     margin-top: 5px;
-    font-size: 11.5px;
+    font-size: 12.5px;
     color: var(--mut);
   }
   .dcard-prog {
@@ -2162,22 +2173,23 @@
     border: 1px solid var(--line2);
   }
   .seentime {
-    font-size: 11.5px;
+    font-size: 12.5px;
     color: var(--mut);
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
   .tbl {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     border: 1px solid var(--line);
-    font-size: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 13px;
   }
   .tbl th {
     text-align: left;
-    font-size: 10px;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
+    font-size: 11.5px;
     color: var(--fnt);
     font-weight: 600;
     padding: 9px 12px;
@@ -2221,13 +2233,11 @@
   }
   .cellsub {
     color: var(--dim);
-    font-size: 11px;
+    font-size: 12px;
     margin-top: 2px;
   }
   .mtag {
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-size: 11.5px;
     color: var(--mut);
   }
   .iconbtn {
@@ -2235,10 +2245,10 @@
     background: transparent;
     color: var(--mut);
     font: inherit;
-    font-size: 10px;
-    letter-spacing: 0.08em;
+    font-size: 11.5px;
     padding: 3px 9px;
     vertical-align: middle;
+    border-radius: 4px;
   }
   .iconbtn + .iconbtn {
     margin-left: 6px;
@@ -2255,20 +2265,22 @@
     background: var(--raise);
     border: 1px solid var(--line2);
     color: var(--ink);
-    font-size: 11px;
+    font-size: 12px;
     padding: 7px 13px;
     z-index: 80;
     max-width: 80vw;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    border-radius: 4px;
   }
   .tabempty {
     border: 1px solid var(--line);
+    border-radius: 8px;
     padding: 44px 20px;
     text-align: center;
     color: var(--mut);
-    font-size: 12.5px;
+    font-size: 13.5px;
   }
   .joblog-wrap {
     position: relative;
@@ -2277,7 +2289,7 @@
   .joblog {
     max-height: 360px;
     margin: 0;
-    font-size: 11.5px;
+    font-size: 12.5px;
     line-height: 1.5;
     /* Override the app-wide user-select:none so the log can be copied. */
     user-select: text;
@@ -2292,17 +2304,17 @@
     background: var(--raise);
     color: var(--acc);
     font: inherit;
-    font-size: 10.5px;
-    letter-spacing: 0.05em;
+    font-size: 12px;
     padding: 4px 10px;
     cursor: pointer;
+    border-radius: 4px;
   }
   .livebtn:hover {
     background: var(--accsoft);
   }
   .tabnote {
     margin: 14px 0 0;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--fnt);
   }
 
@@ -2331,13 +2343,13 @@
   }
   .licenses :global(.lic-name) {
     margin: 0 0 4px;
-    font-size: 12.5px;
+    font-size: 13.5px;
     font-weight: 600;
     color: var(--ink);
   }
   .licenses :global(.lic-used) {
     margin-bottom: 8px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--mut);
     word-break: break-word;
   }
@@ -2348,7 +2360,7 @@
     border: 1px solid var(--line);
     background: var(--bar);
     padding: 8px 10px;
-    font-size: 10.5px;
+    font-size: 12px;
     line-height: 1.5;
     color: var(--fnt);
     white-space: pre-wrap;
@@ -2380,9 +2392,9 @@
     text-align: center;
     font-size: 13px;
     color: var(--ink);
-    letter-spacing: 0.02em;
     word-break: break-all;
     margin-bottom: 16px;
+    font-family: var(--font-mono);
   }
 
   .actions {
@@ -2401,17 +2413,18 @@
     max-width: 520px;
     margin-top: 20px;
     border: 1px solid var(--line);
+    border-radius: 8px;
     padding: 16px 18px;
   }
   .notice-body {
-    font-size: 12.5px;
+    font-size: 13.5px;
     color: var(--ink2);
     line-height: 1.6;
     margin-bottom: 14px;
   }
 
   .lede {
-    font-size: 12.5px;
+    font-size: 13.5px;
     color: var(--mut);
     line-height: 1.6;
     margin: 0 0 16px;
@@ -2419,12 +2432,12 @@
   }
   .err {
     color: var(--danger);
-    font-size: 12px;
+    font-size: 13px;
     margin: 14px 0 0;
   }
   .busy {
     color: var(--acc);
-    font-size: 12px;
+    font-size: 13px;
     margin: 12px 0 0;
   }
 
@@ -2436,11 +2449,11 @@
     margin-bottom: 9px;
   }
   .plabel {
-    font-size: 12.5px;
+    font-size: 13.5px;
     color: var(--ink2);
   }
   .ppct {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--mut);
   }
   .pbar {
@@ -2457,7 +2470,7 @@
   }
   .psub {
     margin-top: 10px;
-    font-size: 11.5px;
+    font-size: 12.5px;
     color: var(--fnt);
   }
 
@@ -2488,6 +2501,7 @@
   .empty-title {
     font-size: 15px;
     color: var(--ink);
+    font-stretch: 125%;
   }
   .hero .lede {
     max-width: 36ch;
@@ -2498,15 +2512,16 @@
   .log {
     margin: 0 0 16px;
     border: 1px solid var(--line);
+    border-radius: 8px;
     background: var(--bar);
     padding: 14px 16px;
-    font-family: inherit;
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--ink2);
     line-height: 1.9;
     white-space: pre-wrap;
     max-height: 260px;
     overflow-y: auto;
+    font-family: var(--font-mono);
   }
   .log.danger {
     border-color: var(--danger);
@@ -2524,7 +2539,7 @@
     padding: 0 15px;
     background: var(--bar);
     border-top: 1px solid var(--line);
-    font-size: 10.5px;
+    font-size: 12px;
     color: var(--fnt);
     flex: none;
   }
@@ -2551,7 +2566,7 @@
     background: transparent;
     color: var(--mut);
     font: inherit;
-    font-size: 10.5px;
+    font-size: 12px;
   }
   .linkbtn:hover {
     color: var(--ink2);
@@ -2577,14 +2592,14 @@
     max-width: 100%;
     background: var(--raise);
     border: 1px solid var(--line2);
-    border-radius: 9px;
+    border-radius: 8px;
     padding: 22px 24px;
   }
   .modal .eyebrow {
     margin-bottom: 12px;
   }
   .modal-body {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--mut);
     line-height: 1.7;
     margin: 0 0 18px;
@@ -2613,14 +2628,14 @@
     padding: 14px 0;
   }
   .modal-note {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--mut);
   }
   .waiting {
     display: flex;
     align-items: center;
     gap: 7px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--mut);
   }
   .spin {

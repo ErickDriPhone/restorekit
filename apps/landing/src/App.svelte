@@ -280,7 +280,7 @@
 
       <img
         src={shotRestoreDark}
-        alt="restorekit desktop app with a MacBook Pro in DFU mode selected, ready to erase and restore"
+        alt="restorekit desktop app restoring a MacBook Pro, 42% through sending the filesystem, with two more macs queued"
         class="block w-full rounded-lg border border-silk/15 shadow-[0_30px_60px_-20px_rgba(4,20,14,0.8)] lg:w-[128%] lg:max-w-none"
         width="1720"
         height="1240"
@@ -565,7 +565,7 @@
         <figure>
           <img
             src={shotRestoreLight}
-            alt="RestoreKit restore view in light mode"
+            alt="restorekit restore view in light mode"
             class="block w-full rounded-lg border border-silk/15"
             width="1720"
             height="1240"
