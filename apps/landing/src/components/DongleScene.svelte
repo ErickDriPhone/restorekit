@@ -17,15 +17,18 @@
   </Canvas>
   {#if host && target}
     {#each [
-      { p: host, label: "host port" },
-      { p: target, label: "target port" },
-    ] as { p, label } (label)}
+      { p: host, label: "To your computer", end: false },
+      { p: target, label: "To the mac you're fixing", end: true },
+    ] as { p, label, end } (label)}
+      <!-- each label hangs inward from its port so it never runs off the edge -->
       <span
-        class="pointer-events-none absolute z-10 flex -translate-x-1/2 flex-col items-center text-[10px] tracking-[0.14em] uppercase text-mut"
-        style="left: {Math.min(Math.max(p.x, 0.07), 0.93) * 100}%; top: {p.y * 100}%"
+        class="pointer-events-none absolute z-10 flex flex-col text-[12px] text-silk {end
+          ? '-translate-x-full items-end'
+          : 'items-start'}"
+        style="left: {Math.min(Math.max(p.x, 0.04), 0.96) * 100}%; top: {p.y * 100}%"
       >
-        <span class="h-10 w-px bg-line2"></span>
-        <span class="bg-page/85 px-1.5 py-0.5 whitespace-nowrap">{label}</span>
+        <span class="h-10 w-px bg-silk3/60"></span>
+        <span class="rounded-[3px] bg-mask-deep/85 px-1.5 py-0.5 whitespace-nowrap">{label}</span>
       </span>
     {/each}
   {/if}

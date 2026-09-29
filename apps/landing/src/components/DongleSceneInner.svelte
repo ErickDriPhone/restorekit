@@ -24,8 +24,8 @@
     onports?: (host: { x: number; y: number }, target: { x: number; y: number }) => void;
   } = $props();
 
-  const AMBER = "#e8a33d";
-  const AMBER_BRIGHT = "#f0b255";
+  const GOLD = "#dcb660";
+  const GOLD_BRIGHT = "#ecca7c";
 
   // The actual board: dongle-lite-1s4l exported straight from the KiCad PCB
   // (kicad-cli pcb export glb --subst-models --include-tracks ... then
@@ -90,15 +90,15 @@
     board = holder;
   });
 
-  const traceMat = new MeshBasicMaterial({ color: AMBER, transparent: true, opacity: 0.35 });
-  const pulseMat = new MeshBasicMaterial({ color: AMBER_BRIGHT, transparent: true, opacity: 0 });
+  const traceMat = new MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.35 });
+  const pulseMat = new MeshBasicMaterial({ color: GOLD_BRIGHT, transparent: true, opacity: 0 });
   const pulseGeo = new SphereGeometry(0.06, 12, 12);
 
   const reduced =
     typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const { scene, camera, size } = useThrelte();
-  scene.fog = new Fog("#050505", 8, 22);
+  scene.fog = new Fog("#0b2d21", 8, 22);
 
   // Frame the whole board (plus connector overhang) regardless of container
   // aspect: back the camera off along its view direction until the board's
@@ -132,7 +132,7 @@
     ty = (e.clientY / innerHeight - 0.5) * 0.12;
   }
 
-  // One trigger loop: idle, a pulse runs host to target, an amber flash washes
+  // One trigger loop: idle, a pulse runs host to target, an gold flash washes
   // over the target end on arrival (the mac just dropped into DFU), then it
   // settles and repeats. The board rocks instead of spinning so host stays
   // left and target right, matching the labels.
@@ -201,13 +201,13 @@
   oncreate={(c) => c.lookAt(0, -0.25, 0)}
 />
 
-<T.GridHelper args={[26, 26, "#1c1b13", "#12110c"]} position.y={-1.3} />
+<T.GridHelper args={[26, 26, "#1a5040", "#133f30"]} position.y={-1.3} />
 
-<!-- warm key + cool fill + amber DFU flash over the target end -->
+<!-- warm key + cool fill + gold DFU flash over the target end -->
 <T.AmbientLight intensity={0.55} />
 <T.DirectionalLight position={[4, 7, 5]} intensity={2.2} color="#fff1da" />
 <T.DirectionalLight position={[-5, 3, -4]} intensity={0.7} color="#9db4c4" />
-<T.PointLight bind:ref={flashLight} position={[3.2, 1.1, 0]} intensity={0} color={AMBER} distance={5} />
+<T.PointLight bind:ref={flashLight} position={[3.2, 1.1, 0]} intensity={0} color={GOLD} distance={5} />
 
 <T.Group bind:ref={rig}>
   {#if board}

@@ -6,23 +6,23 @@ const theme = {
   type: "dark" as const,
   colors: {
     "editor.background": "#00000000",
-    "editor.foreground": "#d7d2c4",
+    "editor.foreground": "#c4d3c8",
   },
   settings: [
-    { settings: { foreground: "#d7d2c4" } },
-    { scope: ["comment", "punctuation.definition.comment"], settings: { foreground: "#77766a" } },
-    { scope: ["string", "punctuation.definition.string"], settings: { foreground: "#7ba86a" } },
+    { settings: { foreground: "#c4d3c8" } },
+    { scope: ["comment", "punctuation.definition.comment"], settings: { foreground: "#7fa391" } },
+    { scope: ["string", "punctuation.definition.string"], settings: { foreground: "#b2de93" } },
     {
       scope: ["keyword", "storage.type", "storage.modifier", "keyword.operator"],
-      settings: { foreground: "#e8a33d" },
+      settings: { foreground: "#dcb660" },
     },
-    { scope: ["constant.numeric", "constant.language"], settings: { foreground: "#6a93a8" } },
+    { scope: ["constant.numeric", "constant.language"], settings: { foreground: "#9fc7d8" } },
     {
       scope: ["entity.name.function", "support.function", "meta.function-call"],
-      settings: { foreground: "#e6e2d6" },
+      settings: { foreground: "#f1f0e6" },
     },
-    { scope: ["variable", "variable.other"], settings: { foreground: "#d7d2c4" } },
-    { scope: ["entity.name.type", "support.type"], settings: { foreground: "#6a93a8" } },
+    { scope: ["variable", "variable.other"], settings: { foreground: "#c4d3c8" } },
+    { scope: ["entity.name.type", "support.type"], settings: { foreground: "#9fc7d8" } },
   ],
 };
 

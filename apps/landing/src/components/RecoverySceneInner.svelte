@@ -16,11 +16,11 @@
     Vector3,
   } from "three";
 
-  const AMBER = "#e8a33d";
-  const AMBER_BRIGHT = "#f0b255";
-  const EDGE = "#8f8f7a";
-  const EDGE_DEAD = "#454437";
-  const CABLE = "#33322a";
+  const GOLD = "#dcb660";
+  const GOLD_BRIGHT = "#ecca7c";
+  const EDGE = "#92b1a1";
+  const EDGE_DEAD = "#2b5f4a";
+  const CABLE = "#1f5c45";
 
   // Laptops are edge-outlined primitives; screens are emissive-looking planes.
   const baseEdges = new EdgesGeometry(new BoxGeometry(3, 0.14, 2.1));
@@ -39,9 +39,9 @@
   const hostEdgeMat = new LineBasicMaterial({ color: EDGE });
   const targetEdgeMat = new LineBasicMaterial({ color: EDGE_DEAD });
   const cableMat = new MeshBasicMaterial({ color: CABLE });
-  const hostScreenMat = new MeshBasicMaterial({ color: AMBER, transparent: true, opacity: 0.22 });
-  const targetScreenMat = new MeshBasicMaterial({ color: AMBER, transparent: true, opacity: 0 });
-  const pulseMat = new MeshBasicMaterial({ color: AMBER_BRIGHT, transparent: true, opacity: 0 });
+  const hostScreenMat = new MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.22 });
+  const targetScreenMat = new MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0 });
+  const pulseMat = new MeshBasicMaterial({ color: GOLD_BRIGHT, transparent: true, opacity: 0 });
 
   const edgeDead = new Color(EDGE_DEAD);
   const edgeLive = new Color(EDGE);
@@ -50,7 +50,7 @@
     typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const { scene } = useThrelte();
-  scene.fog = new Fog("#050505", 9, 19);
+  scene.fog = new Fog("#0b2d21", 9, 19);
 
   let rig = $state<Group>();
   let pulseMesh = $state<Mesh>();
@@ -119,7 +119,7 @@
 />
 
 <T.Group bind:ref={rig}>
-  <T.GridHelper args={[28, 28, "#1c1b13", "#12110c"]} position.y={-1.18} />
+  <T.GridHelper args={[28, 28, "#1a5040", "#133f30"]} position.y={-1.18} />
 
   <!-- your machine -->
   <T.Group position.x={-3.9} rotation.y={0.55}>
