@@ -6,6 +6,8 @@
   import shotHistoryDark from "./assets/app-history-dark.png";
   import shotRestoreLight from "./assets/app-restore-light.png";
   import leftshiftLogo from "./assets/leftshift.svg";
+  import sceneDongle from "./assets/scene-dongle.webp";
+  import sceneRecovery from "./assets/scene-recovery.webp";
 
   const GITHUB = "https://github.com/fcjr/restorekit";
   const RELEASES = `${GITHUB}/releases`;
@@ -42,6 +44,7 @@
   const heroHost = $derived(hosts.find((h) => h.id === host) ?? hosts[0]);
 
   onMount(async () => {
+    webgl = hasWebgl();
     const ua = navigator.userAgent;
     if (/Windows/.test(ua)) host = "windows";
     else if (/Linux/.test(ua) && !/Android/.test(ua)) host = "linux";
@@ -131,6 +134,9 @@
       return () => io.disconnect();
     });
   }
+  // Without WebGL (hardware acceleration off, blocklisted GPU) the scenes
+  // show a still frame instead of an empty box.
+  let webgl = $state(true);
   let sceneHost = $state<HTMLElement>();
   let showScene = $state(false);
   lazyScene(
@@ -188,6 +194,10 @@
       {copied === id ? "Copied" : "Copy"}
     </button>
   </div>
+{/snippet}
+
+{#snippet still(src: string)}
+  <img {src} alt="" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />
 {/snippet}
 
 {#snippet pad()}
@@ -361,7 +371,11 @@
           {#if showDongle}
             {#await import("./components/DongleScene.svelte") then Mod}
               <Mod.default />
+            {:catch}
+              {@render still(sceneDongle)}
             {/await}
+          {:else if !webgl}
+            {@render still(sceneDongle)}
           {/if}
         </div>
         <figcaption class="t-small mt-3">
@@ -458,13 +472,17 @@
 
       <div
         bind:this={sceneHost}
-        class="mt-10 h-[280px] overflow-hidden rounded-lg border border-copper bg-mask-deep md:h-[380px]"
+        class="relative mt-10 h-[280px] overflow-hidden rounded-lg border border-copper bg-mask-deep md:h-[380px]"
         aria-hidden="true"
       >
         {#if showScene}
           {#await import("./components/RecoveryScene.svelte") then Mod}
             <Mod.default />
+          {:catch}
+            {@render still(sceneRecovery)}
           {/await}
+        {:else if !webgl}
+          {@render still(sceneRecovery)}
         {/if}
       </div>
 
