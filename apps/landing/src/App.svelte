@@ -299,6 +299,12 @@
         <p class="mt-5 max-w-[56ch]">
           Putting a mac into DFU takes a USB-PD message that normal PC ports can't send, so you've always needed a second mac. dongle-lite sends it for you. It also exposes apple's serial console, so you can see why a restore failed.
         </p>
+        <p class="mt-4 max-w-[56ch]">
+          Buying one from me is what keeps restorekit going, so I'd love it if you did. But it's
+          open hardware, so if you'd rather fire up the soldering iron, the
+          <a href="{GITHUB}/tree/main/hardware/dongle-lite" class="lnk">schematics and fab files</a>
+          are all in the repo. I won't be offended. Much.
+        </p>
 
         <dl class="mt-7 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 t-data">
           <dt class="text-silk3">Ports</dt>
@@ -308,10 +314,6 @@
           
           <dt class="text-silk3">Size</dt>
           <dd class="text-silk">77 × 22 mm</dd>
-          <dt class="text-silk3">Files</dt>
-          <dd class="text-silk">
-            <a href="{GITHUB}/tree/main/hardware/dongle-lite" class="lnk">In the repo</a>, build your own
-          </dd>
         </dl>
 
         <div class="mt-9 rounded-lg border border-copper bg-mask p-5">
