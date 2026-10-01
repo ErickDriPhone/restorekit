@@ -132,8 +132,9 @@ build and smoke-test both x86_64 and aarch64 on that baseline. To run the focuse
 launcher tests, use `node --test apps/desktop/scripts/prepare-appimage.test.mjs`.
 After building an AppImage, run
 `bash apps/desktop/scripts/check-appimage.sh path/to/RestoreKit.AppImage`
-(requires `xvfb`, `xauth`, and `xdotool`). This checks launcher permissions before
-starting the GUI on a virtual display; it does not exercise device restoration.
+(requires `xvfb`, `xauth`, `xdotool`, `openbox`, `dbus-x11`, and `x11-utils`). This
+checks launcher permissions before starting the GUI on a virtual desktop; it
+does not exercise device restoration.
 
 The pre-bundle hook works around the locked Tauri CLI downloading AppRun with
 mode `0770`. It verifies the upstream launcher and sets `0755` in Tauri's cache
