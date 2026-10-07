@@ -284,6 +284,13 @@ pub fn spawn_restore_mode_watcher() -> Option<RestoreWatcherGuard> {
         return None;
     }
 
+    // The embedding app already runs an elevated watcher (started on the user's
+    // click, so its UAC prompt is in the foreground — one raised here minutes
+    // later, from a hidden child, only flashes in the taskbar).
+    if std::env::var_os("RESTOREKIT_EXTERNAL_RESTORE_WATCHER").is_some_and(|v| v == "1") {
+        return Some(RestoreWatcherGuard { liveness });
+    }
+
     // Already admin (e.g. launched from an elevated shell or the app already
     // elevated)? Skip UAC entirely — run the watcher inline on a background
     // thread. Otherwise relaunch this binary elevated (one prompt, shown as

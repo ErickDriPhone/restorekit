@@ -318,12 +318,22 @@ pub(crate) fn ensure_present(
     if let Some(id) = dongle {
         return finish_trigger(json, DfuVia::Dongle(id), timeout, ecid);
     }
-    // Already in DFU? Use it without re-triggering.
+    // Already in DFU? Use it without re-triggering. A Mac pinned by ECID in
+    // recovery (iBoot) is restored from there too: idevicerestore starts from
+    // recovery natively, and hosts that can't trigger DFU (Windows, Linux,
+    // Intel Macs) would otherwise need a manual DFU entry — e.g. after a NAND
+    // replacement, which boots straight into recovery.
     if let Some(e) = ecid {
         let mut devices = device::list()?;
         device::identify(&mut devices);
         match devices.into_iter().find(|d| d.ecid == Some(e)) {
             Some(dev) if dev.in_dfu() => return Ok(dev),
+            Some(dev) if dev.mode == restorekit::UsbMode::Recovery && dev.identity.is_some() => {
+                if !json {
+                    println!("{} is in recovery mode; restoring from recovery.", dev.display_name());
+                }
+                return Ok(dev);
+            }
             Some(dev) if !json => {
                 println!(
                     "{} is in {} mode; putting it into DFU...",

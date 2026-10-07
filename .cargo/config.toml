@@ -1,0 +1,4 @@
+# Windows gives the main thread a 2 MB stack (8 MB on macOS/Linux); IPSW
+# verification overflows it ("thread 'main' has overflowed its stack").
+[target.x86_64-pc-windows-gnu]
+rustflags = ["-C", "link-args=-Wl,--stack,67108864"]
