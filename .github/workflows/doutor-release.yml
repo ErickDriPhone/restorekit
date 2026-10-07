@@ -1,8 +1,8 @@
 name: doutor-release
 
-# Builds of the Doutor Repair fork (recovery-mode restores, external restore-mode
-# watcher, 64 MB main-thread stack on Windows). Tag `dr-v<version>`, e.g.
-# `dr-v0.5.11-dr.1`; archives follow upstream's GoReleaser naming.
+# Windows build of the Doutor Repair fork (recovery-mode restores, external
+# restore-mode watcher, 64 MB main-thread stack). Tag `dr-v<version>`, e.g.
+# `dr-v0.5.11-dr.2`; the archive follows upstream's GoReleaser naming.
 on:
   push:
     tags: ["dr-v*"]
@@ -12,36 +12,6 @@ permissions:
   contents: write
 
 jobs:
-  build-macos:
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - os: macos-14
-            goarch: arm64
-          - os: macos-15-intel
-            goarch: amd64
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Install macOS build deps
-        run: brew install autoconf automake libtool pkg-config cmake autoconf-archive
-      - name: Install Rust toolchain
-        run: rustup toolchain install stable --profile minimal --no-self-update
-      - name: Build
-        run: cargo build --release --locked -p restorekit-cli
-      - name: Stage artifact
-        run: |
-          mkdir -p artifacts/restorekit_darwin_${{ matrix.goarch }}
-          cp target/release/restorekit artifacts/restorekit_darwin_${{ matrix.goarch }}/restorekit
-      - uses: actions/upload-artifact@v4
-        with:
-          name: restorekit_darwin_${{ matrix.goarch }}
-          path: artifacts/restorekit_darwin_${{ matrix.goarch }}
-          if-no-files-found: error
-
   build-windows:
     runs-on: windows-latest
     steps:
@@ -90,30 +60,20 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [build-macos, build-windows]
+    needs: [build-windows]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          path: artifacts
-          pattern: restorekit_*
+          name: restorekit_windows_amd64
+          path: artifacts/restorekit_windows_amd64
       - name: Package
         run: |
           set -euo pipefail
-          tag="${GITHUB_REF_NAME}"
-          version="${tag#dr-v}"
-          mkdir -p dist
-          for plat in darwin_arm64 darwin_amd64; do
-            d="pkg/restorekit_${version}_${plat}"
-            mkdir -p "$d"
-            cp "artifacts/restorekit_${plat}/restorekit" "$d/"
-            chmod +x "$d/restorekit"
-            cp LICENSE NOTICE README.md "$d/"
-            tar -C "$d" -czf "dist/restorekit_${version}_${plat}.tar.gz" .
-          done
+          version="${GITHUB_REF_NAME#dr-v}"
           d="pkg/restorekit_${version}_windows_amd64"
-          mkdir -p "$d"
+          mkdir -p "$d" dist
           cp artifacts/restorekit_windows_amd64/restorekit.exe LICENSE NOTICE README.md "$d/"
           (cd "$d" && zip -q "../../dist/restorekit_${version}_windows_amd64.zip" *)
           (cd dist && sha256sum * > checksums.txt && cat checksums.txt)
@@ -124,4 +84,4 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" dist/* \
             --repo "${GITHUB_REPOSITORY}" \
             --title "${GITHUB_REF_NAME}" \
-            --notes "Doutor Repair build of restorekit: restore/revive from recovery mode (with --ecid), RESTOREKIT_EXTERNAL_RESTORE_WATCHER=1 to skip the late UAC watcher, 64 MB main-thread stack on Windows. Source: this tag."
+            --notes "Doutor Repair Windows build of restorekit: restore/revive from recovery mode (with --ecid), RESTOREKIT_EXTERNAL_RESTORE_WATCHER=1 to skip the late UAC watcher, 64 MB main-thread stack. Source: this tag."
